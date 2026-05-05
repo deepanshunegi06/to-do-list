@@ -1,203 +1,224 @@
-# 📝 ToDo App - Full Stack Application
+# DevOps Complete Project
 
-A modern, feature-rich To-Do application built with React and Node.js.
+Automated CI/CD pipeline using AWS, Terraform, Docker, and GitHub Actions.
 
-## ✨ Features
+## Project Structure
 
-### Authentication
-- User registration and login
-- JWT-based authentication
-- Secure password handling with bcrypt
+```
+devops-project/
+├── app/                          # Application
+│   ├── server.js               # Node.js Express app
+│   ├── package.json            # Node.js dependencies
+│   ├── Dockerfile             # Docker image definition
+│   └── .github/
+│       └── workflows/
+│           └── deploy.yml      # GitHub Actions CI/CD
+├── terraform/                   # Infrastructure as Code
+│   ├── main.tf               # AWS resources
+│   ├── variables.tf         # Input variables
+│   └── outputs.tf           # Output values
+└── README.md                # This file
+```
 
-### Task Management
-- Create, read, update, and delete tasks
-- Mark tasks as complete/incomplete
-- Priority levels (Low, Medium, High)
-- Due date tracking
-- Task categorization
+## PART 1: Terraform Infrastructure
 
-### Categories
-- Work (Red)
-- Personal (Teal)
-- Shopping (Blue)
-- Health (Green)
-- Study (Yellow)
+### Files Created
 
-### Dashboard
-- Total tasks count
-- Completed tasks count
-- Pending tasks count
-- High priority tasks count
-- Completion rate percentage
-- Category-wise breakdown
+**variables.tf**
+```hcl
+variable "aws_region"           { default = "us-east-1" }
+variable "vpc_cidr"            { default = "10.0.0.0/16" }
+variable "public_subnet_1_cidr"  { default = "10.0.1.0/24" }
+variable "public_subnet_2_cidr"  { default = "10.0.2.0/24" }
+```
 
-### UI/UX
-- Beautiful gradient design
-- Responsive layout
-- Modal for adding/editing tasks
-- Filter tasks by status
-- Search functionality
-- Category filtering
+**main.tf** provisions:
+- VPC (CIDR: 10.0.0.0/16)
+- 2 Public Subnets in different AZs
+- Internet Gateway
+- Route Tables and Associations
+- Security Group (SSH 22, HTTP 80)
+- EC2 Instance (Ubuntu) with Docker auto-installed
 
-## 🛠️ Tech Stack
+## PART 2: Application
 
-### Backend
-- Node.js
-- Express.js
-- JWT Authentication
-- In-memory data store (easily replaceable with database)
+**server.js** - Simple Express app:
+```javascript
+const express = require('express');
+const app = express();
 
-### Frontend
-- React 18
-- Axios for API calls
-- React Icons
-- Date-fns
+app.get('/', (req, res) => {
+  res.send('GitHub Actions CI/CD Working 🚀');
+});
 
-### DevOps
-- Docker & Docker Compose
-- Jenkins CI/CD Pipeline
+app.listen(80, '0.0.0.0', () => {
+  console.log('Server running on port 80');
+});
+```
 
-## 🚀 Getting Started
+## PART 3: GitHub Actions Workflow
 
-### Prerequisites
-- Node.js (v18+)
-- Docker & Docker Compose
+**.github/workflows/deploy.yml**:
+- Checkout Code
+- Set up Docker Buildx
+- Build Docker Image
+- Login to Docker Hub (using secrets)
+- Push Docker Image
+- Deploy to AWS EC2 via SSH
 
-### Installation
+## Step-by-Step Setup
+
+### 1. Set Up GitHub Repository
 
 ```bash
-# Clone the repository
-git clone <repo-url>
+# Initialize git if needed
+git init
+git add .
+git commit -m "Initial commit"
+
+# Create GitHub repo and push
+gh repo create devops-project --public --source=. --push
+# Or use: git remote add origin <your-repo-url>
+# Then: git push -u origin main
+```
+
+### 2. Configure GitHub Secrets
+
+Go to: **Settings → Secrets and variables → Actions → New repository secret**
+
+Add these secrets:
+| Secret Name | Description |
+|------------|-------------|
+| DOCKER_USERNAME | Your Docker Hub username |
+| DOCKER_PASSWORD | Your Docker Hub password |
+| SERVER_HOST | EC2 public IP address |
+| SSH_PRIVATE_KEY | Private SSH key for EC2 |
+
+### 3. Set Up AWS Infrastructure
+
+```bash
+cd terraform
+
+# Initialize Terraform
+terraform init
+
+# Plan resources
+terraform plan -var "ami_id=<your-ubuntu-ami-id>"
+
+# Apply (create resources)
+terraform apply -var "ami_id=<your-ubuntu-ami-id>"
+```
+
+### 4. Configure Security
+
+```bash
+# Update ami_id with a valid Ubuntu AMI for your region
+# Get AMI: AWS Console → EC2 → AMI Catalog → ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-amd64
+```
+
+### 5. Push Code to Trigger Pipeline
+
+```bash
+# Make a change
+echo "Test" >> server.js
+
+# Commit and push
+git add .
+git commit -m "Test CI/CD pipeline"
+git push origin main
+```
+
+### 6. Monitor Pipeline
+
+- Go to **Actions** tab in GitHub
+- Watch the workflow run
+- Check logs for each step
+
+### 7. Test the Application
+
+After pipeline completes:
+```
+http://<EC2-PUBLIC-IP>/   # Should return: "GitHub Actions CI/CD Working 🚀"
+```
+
+## Running Locally
+
+### Docker Build
+
+```bash
 cd app
-
-# Install backend dependencies
-npm install
-
-# Install frontend dependencies
-cd client && npm install && cd ..
+docker build -t devops-project:latest .
+docker run -d -p 80:80 devops-project:latest
+# Visit: http://localhost
 ```
 
-### Running Locally
+### Docker Compose
 
 ```bash
-# Run both backend and frontend
-npm run dev
-
-# Or run separately
-npm run server    # Backend on port 8080
-npm run client   # Frontend on port 3000
-```
-
-### Running with Docker
-
-```bash
-# Build and run
+cd app
 docker-compose up -d
-
-# Access the app
-# Frontend: http://localhost
-# Backend API: http://localhost:8080/api
 ```
 
-## 📁 Project Structure
+## Testing
 
-```
-app/
-├── server/                 # Backend
-│   ├── data/
-│   │   └── store.js       # In-memory data store
-│   ├── routes/
-│   │   ├── auth.js        # Authentication routes
-│   │   ├── todos.js       # Todo CRUD routes
-│   │   ├── categories.js  # Category routes
-│   │   └── stats.js       # Stats routes
-│   ├── tests/
-│   │   └── api.test.js    # API tests
-│   └── index.js           # Express server
-├── client/                # React frontend
-│   ├── public/
-│   │   └── index.html
-│   ├── src/
-│   │   ├── App.js         # Main React component
-│   │   ├── index.js       # React entry point
-│   │   └── index.css      # Styles
-│   └── package.json
-├── Dockerfile             # Frontend Docker config
-├── Dockerfile.server      # Backend Docker config
-├── docker-compose.yml     # Docker Compose config
-├── nginx.conf             # Nginx configuration
-├── Jenkinsfile           # CI/CD pipeline
-└── package.json          # Backend dependencies
-```
+### Test Locally
 
-## 🔌 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - Login user
-- `GET /api/auth/me` - Get current user
-
-### Todos
-- `GET /api/todos` - Get all todos (supports filters)
-- `POST /api/todos` - Create new todo
-- `PUT /api/todos/:id` - Update todo
-- `PATCH /api/todos/:id/toggle` - Toggle todo completion
-- `DELETE /api/todos/:id` - Delete todo
-
-### Categories
-- `GET /api/categories` - Get all categories
-
-### Stats
-- `GET /api/stats` - Get dashboard statistics
-
-## 🎯 Example Usage
-
-### Register a User
 ```bash
-curl -X POST http://localhost:8080/api/auth/register \
-  -H "Content-Type: application/json" \
-  -d '{"email": "test@example.com", "password": "password123", "name": "Test User"}'
+# Build the image
+docker build -t devops-project:latest .
+
+# Run and test
+docker run -d -p 80:80 --name test-app devops-project:latest
+curl http://localhost
+# Expected: "GitHub Actions CI/CD Working 🚀"
+docker stop test-app
 ```
 
-### Create a Todo
+### Test Remote
+
 ```bash
-curl -X POST http://localhost:8080/api/todos \
-  -H "Authorization: Bearer <token>" \
-  -H "Content-Type: application/json" \
-  -d '{"title": "Complete project", "priority": "high", "category": "work"}'
+curl http://<SERVER-IP>/
+# Expected: "GitHub Actions CI/CD Working 🚀"
 ```
 
-## 🚀 CI/CD Pipeline (GitHub Actions)
+## GitHub Actions Secrets
 
-The GitHub Actions pipeline automatically:
-1. Checks out code from GitHub
-2. Installs backend dependencies
-3. Runs backend tests
-4. Installs frontend dependencies
-5. Builds React frontend
-6. Builds Docker image
-7. Pushes to Docker Hub
-8. Deploys to your server
+| Secret | How to Get |
+|--------|-------------|
+| DOCKER_USERNAME | Sign up at hub.docker.com |
+| DOCKER_PASSWORD | Your Docker Hub password |
+| SERVER_HOST | `terraform output` after apply |
+| SSH_PRIVATE_KEY | `cat ~/.ssh/id_rsa` |
 
-### Setting Up GitHub Actions
+## Terraform Outputs
 
-1. **Go to your GitHub repository**: https://github.com/deepanshunegi06/to-do-list
+After running `terraform apply`, you'll get:
+- `vpc_id` - VPC ID
+- `public_subnet_1` - Subnet 1 ID  
+- `public_subnet_2` - Subnet 2 ID
+- `web_server_public_ip` - EC2 Public IP
+- `web_server_private_ip` - EC2 Private IP
 
-2. **Add Secrets** (Settings → Secrets and variables → Actions):
-   - `DOCKERHUB_USERNAME` - Your Docker Hub username
-   - `DOCKERHUB_PASSWORD` - Your Docker Hub password
-   - `SERVER_HOST` - Your server IP (e.g., 44.198.167.131)
-   - `SSH_KEY` - Your private SSH key content
+## Clean Up
 
-3. **The pipeline will run automatically** on every push to main!
+```bash
+# Destroy AWS resources
+cd terraform
+terraform destroy
 
-### Manual Run
-Go to Actions tab in GitHub and click "Run workflow"
+# Remove local Docker
+docker stop devops-app
+docker rm devops-app
+docker rmi devops-project:latest
+```
 
-## 📝 License
+## Cost-Free Tips (AWS Free Tier)
+
+- Use `t3.nano` or `t2.micro` instance types
+- Stay under 750 hours/month
+- Use 1 EC2 instance
+- Clean up resources when not in use
+
+## License
 
 MIT License
-
-## 👨‍💻 Author
-
-Built with ❤️ for learning DevOps and CI/CD!
