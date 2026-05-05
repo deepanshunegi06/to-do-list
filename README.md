@@ -167,18 +167,32 @@ curl -X POST http://localhost:8080/api/todos \
   -d '{"title": "Complete project", "priority": "high", "category": "work"}'
 ```
 
-## 🚀 CI/CD Pipeline
+## 🚀 CI/CD Pipeline (GitHub Actions)
 
-The Jenkins pipeline includes:
-1. Code checkout
-2. Install dependencies
-3. Run tests
-4. Build React frontend
-5. Build Docker image
-6. Test Docker container
-7. Push to Docker Hub
-8. Deploy to staging
-9. Deploy to production
+The GitHub Actions pipeline automatically:
+1. Checks out code from GitHub
+2. Installs backend dependencies
+3. Runs backend tests
+4. Installs frontend dependencies
+5. Builds React frontend
+6. Builds Docker image
+7. Pushes to Docker Hub
+8. Deploys to your server
+
+### Setting Up GitHub Actions
+
+1. **Go to your GitHub repository**: https://github.com/deepanshunegi06/to-do-list
+
+2. **Add Secrets** (Settings → Secrets and variables → Actions):
+   - `DOCKERHUB_USERNAME` - Your Docker Hub username
+   - `DOCKERHUB_PASSWORD` - Your Docker Hub password
+   - `SERVER_HOST` - Your server IP (e.g., 44.198.167.131)
+   - `SSH_KEY` - Your private SSH key content
+
+3. **The pipeline will run automatically** on every push to main!
+
+### Manual Run
+Go to Actions tab in GitHub and click "Run workflow"
 
 ## 📝 License
 
