@@ -34,7 +34,7 @@ router.get('/', (req, res) => {
 });
 
 router.post('/', [
-  body('title').notEmpty().withTitle('Title is required'),
+  body('title').notEmpty(),
   body('priority').optional().isIn(['low', 'medium', 'high']),
   body('category').optional()
 ], (req, res) => {
